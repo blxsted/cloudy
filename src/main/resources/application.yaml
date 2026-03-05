@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: Cloudy
+  datasource:
+    url: jdbc:postgresql://localhost:5433/demo
+    username: demo
+    password: demo
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health
