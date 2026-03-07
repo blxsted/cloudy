@@ -7,7 +7,12 @@ import org.springframework.stereotype.Component;
 public class TaskMapper {
 
     public TaskJpaEntity toJpaEntity(Task task) {
-        return new TaskJpaEntity(task.getId(),task.getTitle(),task.getDescription(),task.getCreatedAt(),task.getStatus());
+        return new TaskJpaEntity(
+                task.getId(),
+                task.getTitle(),
+                task.getDescription(),
+                task.getCreatedAt(),
+                task.getStatus());
     }
 
     public Task toDomain(TaskJpaEntity entity) {

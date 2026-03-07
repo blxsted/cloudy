@@ -2,11 +2,13 @@ package com.cloudy.demo.application;
 
 import com.cloudy.demo.domain.Task;
 import com.cloudy.demo.domain.TaskRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+@Service
 public class GetTaskUseCase {
 
     private final TaskRepository taskRepository;

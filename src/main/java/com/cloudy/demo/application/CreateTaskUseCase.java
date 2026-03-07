@@ -2,7 +2,9 @@ package com.cloudy.demo.application;
 
 import com.cloudy.demo.domain.Task;
 import com.cloudy.demo.domain.TaskRepository;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CreateTaskUseCase {
 
     private final TaskRepository taskRepository;

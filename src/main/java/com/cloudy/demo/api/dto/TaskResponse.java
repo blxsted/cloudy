@@ -1,29 +1,19 @@
-package com.cloudy.demo.infrastructure;
+package com.cloudy.demo.api.dto;
 
 import com.cloudy.demo.domain.TaskStatus;
-import jakarta.persistence.*;
-import lombok.Getter;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "tasks")
-public class TaskJpaEntity {
+public class TaskResponse {
 
-    @Id
-    @Column(nullable = false, updatable = false)
     private UUID id;
     private String title;
     private String description;
     private LocalDateTime createdAt;
-    @Enumerated(EnumType.STRING)
     private TaskStatus status;
 
-    public TaskJpaEntity() {}
-
-    public TaskJpaEntity(UUID id, String title, String description, LocalDateTime createdAt, TaskStatus status) {
+    public TaskResponse(UUID id, String title, String description, LocalDateTime createdAt, TaskStatus status) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -50,5 +40,4 @@ public class TaskJpaEntity {
     public TaskStatus getStatus() {
         return status;
     }
-
 }
