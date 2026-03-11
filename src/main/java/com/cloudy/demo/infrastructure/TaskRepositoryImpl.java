@@ -27,7 +27,10 @@ public class TaskRepositoryImpl implements TaskRepository {
 
     @Override
     public List<Task> findAll() {
-        return List.of();
+        return jpaRepository.findAll()
+                .stream()
+                .map(taskMapper::toDomain)
+                .toList();
     }
 
     @Override

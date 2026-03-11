@@ -6,7 +6,6 @@ import com.cloudy.demo.domain.TaskStatus;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 
-
 public class CreateTaskUseCaseTest {
 
     @Test

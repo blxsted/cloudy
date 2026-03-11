@@ -1,10 +1,11 @@
 package com.cloudy.demo.api;
 
-import com.cloudy.demo.api.dto.CreateTaskRepuest;
+import com.cloudy.demo.api.dto.CreateTaskRequest;
 import com.cloudy.demo.api.dto.TaskResponse;
 import com.cloudy.demo.application.CreateTaskUseCase;
 import com.cloudy.demo.application.GetTaskUseCase;
 import com.cloudy.demo.domain.Task;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -29,8 +30,9 @@ public class TaskController {
         return mapper.toResponse(task);
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping()
-    public TaskResponse create(@RequestBody CreateTaskRepuest request) {
+    public TaskResponse create(@RequestBody CreateTaskRequest request) {
         Task task = createTaskUseCase.create(
                 request.getTitle(),
                 request.getDescription()

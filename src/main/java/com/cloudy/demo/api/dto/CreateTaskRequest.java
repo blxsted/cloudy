@@ -1,11 +1,11 @@
 package com.cloudy.demo.api.dto;
 
-public class CreateTaskRepuest {
+public class CreateTaskRequest {
 
     private String title;
     private String description;
 
-    public CreateTaskRepuest() {}
+    public CreateTaskRequest() {}
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
