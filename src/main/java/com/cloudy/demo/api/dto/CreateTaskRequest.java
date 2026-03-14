@@ -1,8 +1,15 @@
 package com.cloudy.demo.api.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class CreateTaskRequest {
 
+    @NotNull
+    @NotBlank
     private String title;
+
+    @NotBlank
     private String description;
 
     public CreateTaskRequest() {}

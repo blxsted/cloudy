@@ -4,7 +4,7 @@ import com.cloudy.demo.domain.Task;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TaskMapper {
+public class TaskEntityMapper {
 
     public TaskJpaEntity toJpaEntity(Task task) {
         return new TaskJpaEntity(

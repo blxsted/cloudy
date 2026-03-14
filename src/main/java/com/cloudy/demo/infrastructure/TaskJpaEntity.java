@@ -2,8 +2,6 @@ package com.cloudy.demo.infrastructure;
 
 import com.cloudy.demo.domain.TaskStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

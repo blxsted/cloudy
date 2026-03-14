@@ -1,10 +1,12 @@
-package com.cloudy.demo.api;
+package com.cloudy.demo.api.controller;
 
+import com.cloudy.demo.api.mapper.TaskResponseMapper;
 import com.cloudy.demo.api.dto.CreateTaskRequest;
 import com.cloudy.demo.api.dto.TaskResponse;
 import com.cloudy.demo.application.CreateTaskUseCase;
 import com.cloudy.demo.application.GetTaskUseCase;
 import com.cloudy.demo.domain.Task;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,11 +16,11 @@ import java.util.UUID;
 @RequestMapping("/tasks")
 public class TaskController {
 
-    private final TaskDtoMapper mapper;
+    private final TaskResponseMapper mapper;
     private final CreateTaskUseCase createTaskUseCase;
     private final GetTaskUseCase getTaskUseCase;
 
-    public TaskController(TaskDtoMapper mapper, CreateTaskUseCase createTaskUseCase, GetTaskUseCase getTaskUseCase) {
+    public TaskController(TaskResponseMapper mapper, CreateTaskUseCase createTaskUseCase, GetTaskUseCase getTaskUseCase) {
         this.mapper = mapper;
         this.createTaskUseCase = createTaskUseCase;
         this.getTaskUseCase = getTaskUseCase;
@@ -32,12 +34,12 @@ public class TaskController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping()
-    public TaskResponse create(@RequestBody CreateTaskRequest request) {
+    public TaskResponse create(@Valid @RequestBody CreateTaskRequest request) {
         Task task = createTaskUseCase.create(
                 request.getTitle(),
                 request.getDescription()
         );
+
         return mapper.toResponse(task);
     }
-
 }

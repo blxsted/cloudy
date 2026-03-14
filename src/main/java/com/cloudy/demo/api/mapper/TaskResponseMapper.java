@@ -1,11 +1,11 @@
-package com.cloudy.demo.api;
+package com.cloudy.demo.api.mapper;
 
 import com.cloudy.demo.api.dto.TaskResponse;
 import com.cloudy.demo.domain.Task;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TaskDtoMapper {
+public class TaskResponseMapper {
 
     public TaskResponse toResponse(Task task) {
         return new TaskResponse(

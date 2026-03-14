@@ -12,9 +12,9 @@ import java.util.UUID;
 public class TaskRepositoryImpl implements TaskRepository {
 
     private final SpringDataTaskRepository jpaRepository;
-    private final TaskMapper taskMapper;
+    private final TaskEntityMapper taskMapper;
 
-    public TaskRepositoryImpl(SpringDataTaskRepository jpaRepository ,TaskMapper taskMapper) {
+    public TaskRepositoryImpl(SpringDataTaskRepository jpaRepository , TaskEntityMapper taskMapper) {
         this.jpaRepository = jpaRepository;
         this.taskMapper = taskMapper;
     }

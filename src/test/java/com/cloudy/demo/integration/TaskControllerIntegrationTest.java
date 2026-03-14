@@ -1,9 +1,7 @@
 package com.cloudy.demo.integration;
 
 import com.cloudy.demo.api.dto.CreateTaskRequest;
-import com.cloudy.demo.application.FakeTaskRepository;
 import com.cloudy.demo.domain.Task;
-import com.cloudy.demo.domain.TaskRepository;
 import com.cloudy.demo.infrastructure.TaskRepositoryImpl;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
