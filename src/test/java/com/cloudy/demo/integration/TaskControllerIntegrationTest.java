@@ -2,7 +2,7 @@ package com.cloudy.demo.integration;
 
 import com.cloudy.demo.api.dto.CreateTaskRequest;
 import com.cloudy.demo.domain.Task;
-import com.cloudy.demo.infrastructure.TaskRepositoryImpl;
+import com.cloudy.demo.domain.TaskRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +26,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Testcontainers
@@ -44,13 +45,78 @@ public class TaskControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private TaskRepositoryImpl taskRepository;
+    private TaskRepository taskRepository;
 
     @DynamicPropertySource
     static void setDatasourceProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
         registry.add("spring.datasource.username", postgresContainer::getUsername);
         registry.add("spring.datasource.password", postgresContainer::getPassword);
+    }
+
+    @Test
+    @Transactional
+    public void shouldReturn400WhenTitleIsBlank()  throws Exception {
+        CreateTaskRequest request = new CreateTaskRequest();
+        request.setTitle("");
+        request.setDescription("");
+
+        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
+
+        // POST /task mit JSON
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Validation failed"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[*].field", hasItem("title")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[*].field", hasItem("description")));
+
+        List<Task> tasks = taskRepository.findAll();
+        assertThat(tasks).hasSize(0);
+    }
+
+    @Test
+    @Transactional
+    public void shouldReturn400WhenTitleIsNull() throws Exception {
+        CreateTaskRequest request = new CreateTaskRequest();
+        request.setTitle(null);
+        request.setDescription("description");
+
+        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Validation failed"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[0].field").value("title"));
+
+        List<Task> tasks = taskRepository.findAll();
+        assertThat(tasks).hasSize(0);
+    }
+
+    @Test
+    @Transactional
+    public void shouldReturn400WhenRequestIsInvalidJson() throws Exception {
+        CreateTaskRequest request = new CreateTaskRequest();
+        String invalidJson = "{ \"title\": \"test\", ";
+        request.setTitle(invalidJson);
+        request.setDescription("object:");
+
+        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Malformed JSON request"));
     }
 
     @Test
@@ -62,7 +128,6 @@ public class TaskControllerIntegrationTest {
 
         System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
 
-        // POST /task mit JSON
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
