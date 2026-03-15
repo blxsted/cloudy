@@ -27,6 +27,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Testcontainers
@@ -149,5 +150,50 @@ public class TaskControllerIntegrationTest {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void shouldReturnEmptyListWhenNoTasksExist() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isEmpty());
+    }
+
+    @Test
+    public void shouldReturnTasksFromDatabase() throws Exception {
+        Task task = Task.create("Learn Spring", "Description");
+        taskRepository.save(task);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(1)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value("Learn Spring"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].description").value("Description"));
+    }
+
+    @Test
+    public void shouldReturnMultipleTasks() throws Exception {
+        Task task = Task.create("Learn Spring", "Description");
+        Task task2 = Task.create("Learning Spring", "Desc");
+
+        taskRepository.save(task);
+        taskRepository.save(task2);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .get("/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(2)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[*].title", hasItem("Learn Spring")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[*].title", hasItem("Learning Spring")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[*].description", hasItem("Description")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[*].description", hasItem("Desc")));
     }
 }

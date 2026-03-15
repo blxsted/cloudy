@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,8 +29,7 @@ public class TaskController {
 
     @GetMapping("/{id}")
     public TaskResponse get(@PathVariable UUID id) {
-        Task task = getTaskUseCase.getTask(id);
-        return mapper.toResponse(task);
+        return mapper.toResponse(getTaskUseCase.getTask(id));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -41,5 +41,10 @@ public class TaskController {
         );
 
         return mapper.toResponse(task);
+    }
+
+    @GetMapping
+    public List<TaskResponse> getTasks() {
+        return mapper.toResponseList(getTaskUseCase.getTasks());
     }
 }
