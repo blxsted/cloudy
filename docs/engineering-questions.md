@@ -129,11 +129,19 @@ Repository Interface
 ↓  
 Infrastructure
 
+Wo beginnt Framework-Abhängigkeit?
+Framework-Abhängigkeit beginnt dort, wo der Code ohne das Framework,Annotation oder APIs verwendet nicht mehr kompilieren oder laufen kann.
+Zum Beispiel durch:
+- Annotationen
+- Framework-Typen
+- Framework-Lifecycle
+- Framework-Konfiguration
 
 
-
-
-
+Die Domain ist framework-unabhängig, weil sie nur fachliche Regeln enthält und keine technischen Details kennt.  
+Das wird durch zwei Dinge erreicht:
+- keine Framework-Typen oder Annotationen
+- Abhängigkeiten nur zu Abstraktionen
 
 
 

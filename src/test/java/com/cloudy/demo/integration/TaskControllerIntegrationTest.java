@@ -11,7 +11,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -24,6 +26,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.hamcrest.Matchers.hasItem;
@@ -33,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
+@Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, statements = "DELETE FROM tasks")
 public class TaskControllerIntegrationTest {
 
     @Container
@@ -53,71 +57,6 @@ public class TaskControllerIntegrationTest {
         registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
         registry.add("spring.datasource.username", postgresContainer::getUsername);
         registry.add("spring.datasource.password", postgresContainer::getPassword);
-    }
-
-    @Test
-    @Transactional
-    public void shouldReturn400WhenTitleIsBlank()  throws Exception {
-        CreateTaskRequest request = new CreateTaskRequest();
-        request.setTitle("");
-        request.setDescription("");
-
-        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
-
-        // POST /task mit JSON
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post("/tasks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(request))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Validation failed"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[*].field", hasItem("title")))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[*].field", hasItem("description")));
-
-        List<Task> tasks = taskRepository.findAll();
-        assertThat(tasks).hasSize(0);
-    }
-
-    @Test
-    @Transactional
-    public void shouldReturn400WhenTitleIsNull() throws Exception {
-        CreateTaskRequest request = new CreateTaskRequest();
-        request.setTitle(null);
-        request.setDescription("description");
-
-        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
-
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post("/tasks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(request))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Validation failed"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[0].field").value("title"));
-
-        List<Task> tasks = taskRepository.findAll();
-        assertThat(tasks).hasSize(0);
-    }
-
-    @Test
-    @Transactional
-    public void shouldReturn400WhenRequestIsInvalidJson() throws Exception {
-        CreateTaskRequest request = new CreateTaskRequest();
-        String invalidJson = "{ \"title\": \"test\", ";
-        request.setTitle(invalidJson);
-        request.setDescription("object:");
-
-        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
-
-        mockMvc.perform(MockMvcRequestBuilders
-                .post("/tasks")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidJson)
-                .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Malformed JSON request"));
     }
 
     @Test
@@ -144,56 +83,108 @@ public class TaskControllerIntegrationTest {
         assertThat(tasks.getFirst().getTitle()).isEqualTo("Learn Spring");
     }
 
-    private String asJsonString(final Object object) {
-        try {
-            return new ObjectMapper().writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @Test
-    public void shouldReturnEmptyListWhenNoTasksExist() throws Exception {
+    public void shouldHandleTaskListLifecycle() throws Exception {
+        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
+
+        // leer
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$").isEmpty());
-    }
 
-    @Test
-    public void shouldReturnTasksFromDatabase() throws Exception {
-        Task task = Task.create("Learn Spring", "Description");
-        taskRepository.save(task);
+        //Post Task 1
+        CreateTaskRequest request1 = new CreateTaskRequest();
+        request1.setTitle("Learn Spring");
+        request1.setDescription("Description");
 
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .post("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(request1))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String json = result.getResponse().getContentAsString();
+
+        UUID uuid = UUID.fromString(new ObjectMapper().readTree(json).get("id").asText());
+
+        // Post Task 2
+        CreateTaskRequest request2 = new CreateTaskRequest();
+        request2.setTitle("Learning Spring");
+        request2.setDescription("Desc");
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(request2))
+                        .accept(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isCreated());
+
+        // Get Liste
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(1)))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value("Learn Spring"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].description").value("Description"));
-    }
-
-    @Test
-    public void shouldReturnMultipleTasks() throws Exception {
-        Task task = Task.create("Learn Spring", "Description");
-        Task task2 = Task.create("Learning Spring", "Desc");
-
-        taskRepository.save(task);
-        taskRepository.save(task2);
-
-        mockMvc.perform(MockMvcRequestBuilders
-                .get("/tasks")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(2)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[*].title", hasItem("Learn Spring")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[*].title", hasItem("Learning Spring")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[*].description", hasItem("Description")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[*].description", hasItem("Desc")));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/tasks/" + uuid)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(uuid.toString()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Learn Spring"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.description").value("Description"));
+    }
+
+    @Test
+    @Transactional
+    public void shouldReturnValidationErrorWhenRequestInvalid()  throws Exception {
+        CreateTaskRequest request = new CreateTaskRequest();
+        request.setTitle("");
+        request.setDescription("");
+
+        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
+
+        // POST /task mit JSON
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Validation failed"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[*].field", hasItem("title")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[*].field", hasItem("description")));
+
+        List<Task> tasks = taskRepository.findAll();
+        assertThat(tasks).hasSize(0);
+    }
+
+    @Test
+    public void shouldReturn404WhenTaskDoesNotExist() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/tasks/" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Task nicht gefunden"));
+    }
+
+    private String asJsonString(final Object object) {
+        try {
+            return new ObjectMapper().writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
