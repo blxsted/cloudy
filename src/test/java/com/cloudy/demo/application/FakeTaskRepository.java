@@ -26,7 +26,7 @@ public class FakeTaskRepository implements TaskRepository {
     }
 
     @Override
-    public boolean deleteById(UUID id) {
-        return tasks.remove(id) != null;
+    public void deleteById(UUID id) {
+        tasks.remove(id);
     }
 }

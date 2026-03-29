@@ -22,14 +22,16 @@ public class TaskController {
     private final StartTaskUseCase startTaskUseCase;
     private final CompleteTaskUseCase completeTaskUseCase;
     private final ReopenTaskUseCase reopenTaskUseCase;
+    private final DeleteTaskUseCase deleteTaskUseCase;
 
-    public TaskController(TaskResponseMapper mapper, CreateTaskUseCase createTaskUseCase, GetTaskUseCase getTaskUseCase, StartTaskUseCase startTaskUseCase, CompleteTaskUseCase completeTaskUseCase, ReopenTaskUseCase reopenTaskUseCase) {
+    public TaskController(TaskResponseMapper mapper, CreateTaskUseCase createTaskUseCase, GetTaskUseCase getTaskUseCase, StartTaskUseCase startTaskUseCase, CompleteTaskUseCase completeTaskUseCase, ReopenTaskUseCase reopenTaskUseCase, DeleteTaskUseCase deleteTaskUseCase) {
         this.mapper = mapper;
         this.createTaskUseCase = createTaskUseCase;
         this.getTaskUseCase = getTaskUseCase;
         this.startTaskUseCase = startTaskUseCase;
         this.completeTaskUseCase = completeTaskUseCase;
         this.reopenTaskUseCase = reopenTaskUseCase;
+        this.deleteTaskUseCase = deleteTaskUseCase;
     }
 
     @GetMapping("/{id}")
@@ -69,5 +71,11 @@ public class TaskController {
     @PatchMapping("/{id}/reopen")
     public void reopenTask(@PathVariable UUID id) {
         reopenTaskUseCase.reopen(id);
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable UUID id) {
+        deleteTaskUseCase.delete(id);
     }
 }

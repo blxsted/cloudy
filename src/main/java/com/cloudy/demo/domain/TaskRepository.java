@@ -12,6 +12,6 @@ public interface TaskRepository {
 
     Task save(Task task);
 
-    boolean deleteById(UUID id);
+    void deleteById(UUID id);
 
 }

@@ -41,8 +41,8 @@ public class TaskRepositoryImpl implements TaskRepository {
    }
 
     @Override
-    public boolean deleteById(UUID id) {
-        return false;
+    public void deleteById(UUID id) {
+         jpaRepository.deleteById(id);
     }
 
 }
