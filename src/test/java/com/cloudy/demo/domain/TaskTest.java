@@ -72,5 +72,64 @@ public class TaskTest {
                 .isBeforeOrEqualTo(after);
     }
 
+    @Test
+    void shouldStartTask() {
+        Task task = Task.create("Learn Spring", "desc");
+
+        task.start();
+
+        assertThat(task.getStatus())
+                .isEqualTo(TaskStatus.IN_PROGRESS);
+    }
+
+    @Test
+    void shouldCompleteTask() {
+        Task task = Task.create("Learn Spring", "desc");
+
+        task.start();
+        task.complete();
+
+        assertThat(task.getStatus())
+                .isEqualTo(TaskStatus.COMPLETED);
+    }
+
+    @Test
+    void shouldReopenCompletedTask(){
+        Task task = Task.create("Learn Spring", "desc");
+
+        task.start();
+        task.complete();
+        task.reopen();
+
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+    }
+
+    @Test
+    void shouldNotCompleteIfOpen(){
+        Task task = Task.create("Learn Spring", "desc");
+
+        assertThatThrownBy(task::complete).isInstanceOf(IllegalStateException.class)
+                .hasMessage("Task kann nicht abgeschlossen werden.");
+    }
+
+    @Test
+    void shouldNotStartIfAlreadyInProgress(){
+        Task task = Task.create("Learn Spring", "desc");
+
+        task.start();
+        assertThatThrownBy(task::start)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Task kann nicht gestartet werden.");
+    }
+
+    @Test
+    void shouldNotCompleteIfAlreadyCompleted() {
+        Task task = Task.create("Learn Spring", "desc");
+        task.start();
+        task.complete();
+
+        assertThatThrownBy(task::complete)
+                .isInstanceOf(IllegalStateException.class);
+    }
 }
 

@@ -37,6 +37,27 @@ public class Task {
         return task;
     }
 
+    public void start(){
+        if (status != TaskStatus.OPEN) {
+            throw new IllegalStateException("Task kann nicht gestartet werden.");
+        }
+        this.status = TaskStatus.IN_PROGRESS;
+    }
+
+    public void complete(){
+        if(status != TaskStatus.IN_PROGRESS){
+            throw new IllegalStateException("Task kann nicht abgeschlossen werden.");
+        }
+        this.status = TaskStatus.COMPLETED;
+    }
+
+    public void reopen(){
+        if (status != TaskStatus.COMPLETED){
+            throw new IllegalStateException("Task kann nicht erneut geöffnet werden.");
+        }
+        this.status = TaskStatus.IN_PROGRESS;
+    }
+
     public UUID getId(){
         return id;
     }

@@ -52,6 +52,8 @@ public class TaskControllerIntegrationTest {
     @Autowired
     private TaskRepository taskRepository;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @DynamicPropertySource
     static void setDatasourceProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
@@ -109,8 +111,7 @@ public class TaskControllerIntegrationTest {
                 .andReturn();
 
         String json = result.getResponse().getContentAsString();
-
-        UUID uuid = UUID.fromString(new ObjectMapper().readTree(json).get("id").asText());
+        UUID uuid = UUID.fromString(objectMapper.readTree(json).get("id").asText());
 
         // Post Task 2
         CreateTaskRequest request2 = new CreateTaskRequest();
@@ -182,9 +183,175 @@ public class TaskControllerIntegrationTest {
 
     private String asJsonString(final Object object) {
         try {
-            return new ObjectMapper().writeValueAsString(object);
+            return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    void shouldStartTask() throws Exception {
+        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
+
+        // Create Task
+        CreateTaskRequest request = new CreateTaskRequest();
+        request.setTitle("Learn Spring");
+        request.setDescription("Description");
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .post("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String json = result.getResponse().getContentAsString();
+        UUID uuid = UUID.fromString(objectMapper.readTree(json).get("id").asText());
+
+        // Start Task
+        mockMvc.perform(MockMvcRequestBuilders
+                        .patch("/tasks/" + uuid + "/start"))
+                .andExpect(status().isNoContent());
+
+        // Verify state via GET
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .get("/tasks/" + uuid)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String getJson = getResult.getResponse().getContentAsString();
+        String status = objectMapper.readTree(getJson).get("status").asText();
+
+        assertThat(status).isEqualTo("IN_PROGRESS");
+    }
+
+    @Test
+    void shouldCompleteTask() throws Exception {
+        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
+
+        // Create Task
+        CreateTaskRequest request = new CreateTaskRequest();
+        request.setTitle("Learn Spring");
+        request.setDescription("Description");
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .post("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String json = result.getResponse().getContentAsString();
+        UUID uuid = UUID.fromString(objectMapper.readTree(json).get("id").asText());
+
+        // Start Task
+        mockMvc.perform(MockMvcRequestBuilders
+                        .patch("/tasks/" + uuid + "/start"))
+                .andExpect(status().isNoContent());
+
+        // Complete Task
+        mockMvc.perform(MockMvcRequestBuilders
+                        .patch("/tasks/" + uuid + "/complete"))
+                .andExpect(status().isNoContent());
+
+        // Verify state via GET
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .get("/tasks/" + uuid)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String getJson = getResult.getResponse().getContentAsString();
+        String status = objectMapper.readTree(getJson).get("status").asText();
+
+        assertThat(status).isEqualTo("COMPLETED");
+    }
+
+    @Test
+    void shouldReopenTask() throws Exception {
+        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
+
+        // Create Task
+        CreateTaskRequest request = new CreateTaskRequest();
+        request.setTitle("Learn Spring");
+        request.setDescription("Description");
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .post("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String json = result.getResponse().getContentAsString();
+        UUID uuid = UUID.fromString(objectMapper.readTree(json).get("id").asText());
+
+        // Start Task
+        mockMvc.perform(MockMvcRequestBuilders
+                        .patch("/tasks/" + uuid + "/start"))
+                .andExpect(status().isNoContent());
+
+        // Complete Task
+        mockMvc.perform(MockMvcRequestBuilders
+                        .patch("/tasks/" + uuid + "/complete"))
+                .andExpect(status().isNoContent());
+
+        // Reopen Task
+        mockMvc.perform(MockMvcRequestBuilders
+                        .patch("/tasks/" + uuid + "/reopen"))
+                .andExpect(status().isNoContent());
+
+        // Verify state via GET
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .get("/tasks/" + uuid)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String getJson = getResult.getResponse().getContentAsString();
+        String status = objectMapper.readTree(getJson).get("status").asText();
+
+        assertThat(status).isEqualTo("IN_PROGRESS");
+    }
+
+    @Test
+    void shouldRejectCompleteWhenNotInProgress() throws Exception {
+        System.out.println("DB URL: " + postgresContainer.getJdbcUrl());
+
+        // Create Task
+        CreateTaskRequest request = new CreateTaskRequest();
+        request.setTitle("Learn Spring");
+        request.setDescription("Description");
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .post("/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String json = result.getResponse().getContentAsString();
+        UUID uuid = UUID.fromString(objectMapper.readTree(json).get("id").asText());
+
+        // Complete Task
+        mockMvc.perform(MockMvcRequestBuilders
+                        .patch("/tasks/" + uuid + "/complete"))
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Task kann nicht abgeschlossen werden."));
+    }
+
+    @Test
+    void shouldReturn404WhenTaskNotFound() throws Exception{
+        mockMvc.perform(MockMvcRequestBuilders.get("/tasks/" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Task nicht gefunden"));
+        ;
     }
 }
