@@ -2,7 +2,7 @@ spring:
   application:
     name: Cloudy
   datasource:
-    url: jdbc:postgresql://localhost:5433/demo
+    url: jdbc:postgresql://db:5432/demo
     username: demo
     password: demo
   jpa:
