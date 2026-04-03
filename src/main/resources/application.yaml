@@ -13,4 +13,4 @@ spring:
     endpoints:
       web:
         exposure:
-          include: health
+          include: health, openapi, swagger-ui, info

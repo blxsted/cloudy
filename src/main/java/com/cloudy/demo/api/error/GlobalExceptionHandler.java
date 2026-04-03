@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -28,16 +26,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValid(MethodArgumentNotValidException ex) {
-        List<ErrorResponse.FieldError>  fieldErrors = ex.getBindingResult().getFieldErrors()
+        var fieldErrors = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .map(fe -> new ErrorResponse.FieldError(fe.getField(), fe.getDefaultMessage()))
-                        .collect(Collectors.toList());
+                .toList();
         return new ErrorResponse("Validation failed", fieldErrors);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleInvalidJson(HttpMessageNotReadableException ex) {
+    public ErrorResponse handleInvalidJson() {
         return error("Invalid request body");
     }
 
@@ -52,5 +50,4 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleIllegalState(IllegalStateException ex) {
         return error(ex.getMessage());
     }
-
 }
