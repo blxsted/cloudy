@@ -23,7 +23,7 @@ public class CreateTaskUseCase {
             description = "";
         }
 
-        log.info("Creating task with title: {}, description: {}", title, description);
+        log.info("Creating task with title: {}", title);
         Task task = Task.create(title, description);
         Task savedTask = taskRepository.save(task);
         log.info("Created task with id: {}", savedTask.getId());

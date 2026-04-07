@@ -26,18 +26,16 @@ public class GetTaskUseCase {
         log.info("Getting Task ID {}", taskId);
 
         if (taskId == null) {
-            log.error("Task ID darf nicht null sein");
+            log.warn("Task ID ist null");
             throw new IllegalArgumentException("Task ID darf nicht null sein");
         }
 
         return (taskRepository.findById(taskId)
-                .orElseThrow(() -> {
-                    log.warn("Task {} not found", taskId);
-                    return new TaskNotFoundException(taskId);
-                }));
+                .orElseThrow(() -> new TaskNotFoundException(taskId)));
     }
 
     public List<Task> getTasks() {
+        log.info("Fetching all tasks");
         return taskRepository.findAll();
     }
 }

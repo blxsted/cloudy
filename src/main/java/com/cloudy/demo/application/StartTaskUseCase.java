@@ -21,7 +21,7 @@ public class StartTaskUseCase {
 
     @Transactional
     public void start(UUID taskId) {
-        log.warn("Starting Task {}", taskId);
+        log.info("Starting Task {}", taskId);
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> {
@@ -29,12 +29,10 @@ public class StartTaskUseCase {
                     return new TaskNotFoundException(taskId);
                 });
 
-        log.debug("Task {} current status: {}", taskId, task.getStatus());
         task.start();
-        log.debug("Task {} new status: {}", taskId, task.getStatus());
 
         taskRepository.save(task);
-        log.info("Task {} completed successfully", taskId);
+        log.info("Task {} started", taskId);
 
     }
 }

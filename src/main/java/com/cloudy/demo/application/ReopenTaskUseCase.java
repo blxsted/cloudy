@@ -32,11 +32,9 @@ public class ReopenTaskUseCase {
                     return new TaskNotFoundException(taskId);
                 });
 
-        log.debug("Task {} current status: {}", taskId, task.getStatus());
         task.reopen();
-        log.debug("Task {} new status: {}", taskId, task.getStatus());
 
-        log.info("Task {} completed successfully", taskId);
+        log.info("Task {} reopened", taskId);
         taskRepository.save(task);
     }
 }

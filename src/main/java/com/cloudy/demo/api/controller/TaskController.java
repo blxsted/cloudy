@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +31,8 @@ public class TaskController {
     private final ReopenTaskUseCase reopenTaskUseCase;
     private final DeleteTaskUseCase deleteTaskUseCase;
 
+    private static final Logger log = LoggerFactory.getLogger(TaskController.class);
+
     public TaskController(TaskResponseMapper mapper, CreateTaskUseCase createTaskUseCase, GetTaskUseCase getTaskUseCase, StartTaskUseCase startTaskUseCase, CompleteTaskUseCase completeTaskUseCase, ReopenTaskUseCase reopenTaskUseCase, DeleteTaskUseCase deleteTaskUseCase) {
         this.mapper = mapper;
         this.createTaskUseCase = createTaskUseCase;
@@ -43,6 +47,7 @@ public class TaskController {
     @ApiResponses(value = {@ApiResponse(responseCode = "404", description = "Task not found")})
     @GetMapping("/{id}")
     public TaskResponse get(@PathVariable UUID id) {
+        log.info("GET /tasks/{}", id);
         return mapper.toResponse(getTaskUseCase.getTask(id));
     }
 
@@ -51,6 +56,8 @@ public class TaskController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping()
     public TaskResponse create(@Valid @RequestBody CreateTaskRequest request) {
+        log.info("POST /tasks - title={}", request.getTitle());
+
         Task task = createTaskUseCase.create(
                 request.getTitle(),
                 request.getDescription()
@@ -62,6 +69,7 @@ public class TaskController {
     @Operation(summary = "Get all tasks", description = "Retrieve a list of all tasks")
     @GetMapping
     public List<TaskResponse> getTasks() {
+        log.info("GET /tasks");
         return mapper.toResponseList(getTaskUseCase.getTasks());
     }
 
@@ -70,6 +78,7 @@ public class TaskController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/{id}/start")
     public void startTask(@PathVariable UUID id) {
+        log.info("PATCH /tasks/{}/start", id);
         startTaskUseCase.start(id);
     }
 
@@ -78,6 +87,7 @@ public class TaskController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/{id}/complete")
     public void completeTask(@PathVariable UUID id) {
+        log.info("PATCH /tasks/{}/complete", id);
         completeTaskUseCase.complete(id);
     }
 
@@ -86,6 +96,7 @@ public class TaskController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/{id}/reopen")
     public void reopenTask(@PathVariable UUID id) {
+        log.info("PATCH /tasks/{}/reopen", id);
         reopenTaskUseCase.reopen(id);
     }
 
@@ -94,6 +105,7 @@ public class TaskController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     public void delete(@PathVariable UUID id) {
+        log.info("DELETE /tasks/{}", id);
         deleteTaskUseCase.delete(id);
     }
 }

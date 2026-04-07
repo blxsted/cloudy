@@ -29,10 +29,8 @@ public class CompleteTaskUseCase {
                     return new TaskNotFoundException(taskId);
                 });
 
-        log.debug("Task {} current status: {}", taskId, task.getStatus());
         task.complete();
-        log.debug("Task {} new status: {}", taskId, task.getStatus());
         taskRepository.save(task);
-        log.info("Task {} completed successfully", taskId);
+        log.info("Task {} completed", taskId);
     }
 }
