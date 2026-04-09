@@ -18,19 +18,24 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Set up Docker Compose
-        run: sudo apt-get update && sudo apt-get install -y docker-compose
-
-      - name: Build & start services
-        run: docker-compose up -d --build
-
-      - name: Run tests
-        run: mvn verify
+      - name: Run unit tests with Maven
+        run: mvn clean test
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
-          SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-          SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+          TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
+
+      - name: Build application
+        run: mvn clean package -DskipTests
+
+      - name: Build Docker image
+        run: docker build -t cloudy:latest .
+
+      - name: Set up Docker Compose for integration test
+        run: docker-compose up -d
+
+      - name: Verify services are running
+        run: sleep 10 && docker-compose ps
 
       - name: Tear down
         run: docker-compose down -v
