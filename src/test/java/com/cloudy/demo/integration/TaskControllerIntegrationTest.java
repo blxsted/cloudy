@@ -163,7 +163,8 @@ public class TaskControllerIntegrationTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Validation failed"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[*].field").isEmpty());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[*].field", hasItem("title")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.fieldErrors[*].field", hasItem("description")));
 
         List<Task> tasks = taskRepository.findAll();
         assertThat(tasks).hasSize(0);

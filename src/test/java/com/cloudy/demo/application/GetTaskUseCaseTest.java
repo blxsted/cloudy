@@ -30,10 +30,11 @@ public class GetTaskUseCaseTest {
 
         TaskRepository repository = new FakeTaskRepository();
         GetTaskUseCase useCase = new GetTaskUseCase(repository);
+        UUID id = UUID.randomUUID();
 
         assertThatThrownBy(() ->
-                useCase.getTask(UUID.randomUUID()))
-                .isInstanceOf(NoSuchElementException.class)
-                .hasMessage("Task nicht gefunden");
+                useCase.getTask(id))
+                .isInstanceOf(TaskNotFoundException.class)
+                .hasMessage("Task nicht gefunden:" + id);
     }
 }
