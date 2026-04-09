@@ -1,0 +1,36 @@
+name: Cloudy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Docker Compose
+        run: sudo apt-get update && sudo apt-get install -y docker-compose
+
+      - name: Build & start services
+        run: docker-compose up -d --build
+
+      - name: Run tests
+        run: mvn verify
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+          SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+          SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
+      - name: Tear down
+        run: docker-compose down -v
